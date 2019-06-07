@@ -33,21 +33,24 @@ class CustomJSONFormatter(JsonFormatter):
 def setup_app():
     """Set up the app."""
     app = Flask("app")
-    setup_logging(app)
+    # setup_logging(app)
     register_endpoints(app)
+
+    @app.before_first_request
+    def setup_logging():
+        """Set up the logging."""
+        handler = logging.StreamHandler()
+        formatter = CustomJSONFormatter(
+            "(asctime) (name) (levelname) (message) (h) (l) (u) (t) (r)  (s) (m) (U) (q) (H) (b) (B) (f) (a) (T) (D) (L) (p)"
+        )
+        handler.setFormatter(formatter)
+        default_handler.setFormatter(formatter)
+        loggers = ["root", "app", "werkzeug", "gunicorn.access", "gunicorn.error"]
+        for each in loggers:
+            log = logging.getLogger(each)
+            log.addHandler(handler)
+
     return app
-
-
-def setup_logging(app):
-    """Set up the logging."""
-    handler = logging.StreamHandler()
-    formatter = JsonFormatter("(asctime) (name) (levelname) (message)")
-    handler.setFormatter(formatter)
-    default_handler.setFormatter(formatter)
-    loggers = ["root", "app", "werkzeug", "gunicorn.access", "gunicorn.error"]
-    for each in loggers:
-        log = logging.getLogger(each)
-        log.addHandler(handler)
 
 
 basic_mod = Blueprint("basic", __name__)
